@@ -489,3 +489,41 @@ body::before {
         font-size: 0.8rem;
     }
 }
+
+/* ====== PIE DE PÁGINA ====== */
+footer {
+    background-color: rgba(15, 23, 42, 0.85); /* Fondo azul oscuro translúcido */
+    padding: 15px 20px;
+    text-align: center;
+    width: 100%;
+    font-size: 0.9rem;
+    margin-top: auto;
+    color: #e2e8f0;
+    position: relative;
+    z-index: 100;
+}
+
+footer::before {
+    content: "";
+    display: block;
+    height: 2px;
+    width: 100%;
+    background: linear-gradient(to right, transparent, #38bdf8, #06b6d4, transparent);
+    margin-bottom: 8px;
+}
+
+.footer-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+footer p {
+    margin: 4px 0;
+    color: #e2e8f0;
+}
+
+.signature {
+    font-style: italic;
+    color: #94a3b8;
+    font-size: 0.85rem;
+}
