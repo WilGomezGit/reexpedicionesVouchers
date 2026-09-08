@@ -14,9 +14,11 @@
     <div class="container">
         <div class="content-box">
             <div class="titleContainer">
-             <!--    <button class="home-button" onclick="location.href='../index.html'">
+                <!-- Botón de inicio descomentado si quieres usarlo
+                <button class="home-button" onclick="location.href='../index.html'">
                     <i class="fas fa-arrow-left"></i> Inicio
-                </button> -->
+                </button>
+                -->
                 <h1>Organizar y validar | Vouchers Reexpediciones</h1>
                 <p>Carga imágenes/PDF y un Excel para validar y generar un PDF con 4 por hoja.</p>
             </div>
@@ -71,11 +73,21 @@
         <button class="scrollButton" onclick="scrollToBottom()">Ir al Final</button>
     </div>
 
-    <!-- Librerías -->
+    <!-- PIE DE PÁGINA -->
+    <footer>
+        <div class="footer-content">
+            <p>Copyright © | Popayán - Cauca 2024</p>
+            <p>Tesorería Comfacauca</p>
+            <p class="signature">Creado por: Wilmar Andrés Gómez</p>
+        </div>
+    </footer>
+
+    <!-- Librerías (una sola vez) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
+    <!-- Script de la aplicación (una sola vez) -->
     <script src="script.js"></script>
 </body>
 </html>
