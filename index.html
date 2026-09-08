@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organizador y Validador de Documentos (4 por hoja)</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="content-box">
+            <div class="titleContainer">
+                <button class="home-button" onclick="location.href='../index.html'">
+                    <i class="fas fa-arrow-left"></i> Inicio
+                </button>
+                <h1>Organizador y Validador de Documentos</h1>
+                <p>Carga imágenes/PDF y un Excel para validar y generar un PDF con 4 por hoja.</p>
+            </div>
+
+            <!-- Zona de carga de Imágenes/PDF -->
+            <div id="dropZone" class="drop-zone">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p class="drop-title">Arrastra imágenes/PDF aquí o haz clic</p>
+                <p class="drop-subtitle">Nombres: "1. 10299841.jpg", "2. 1061688763.png", etc.</p>
+                <input type="file" id="fileInput" class="file-input" multiple accept="image/*,.pdf" hidden>
+            </div>
+
+            <!-- Zona de carga de Excel -->
+            <div id="dropZoneExcel" class="drop-zone drop-zone-excel">
+                <i class="fas fa-file-excel"></i>
+                <p class="drop-title">Arrastra el Excel (.xlsx) aquí o haz clic</p>
+                <p class="drop-subtitle">Debe contener columnas: DOCUMENTO y OBSERVACIÓN</p>
+                <input type="file" id="fileExcel" class="file-input" accept=".xlsx,.xls" hidden>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="button-container">
+                <!-- Botón superior: SOLO VALIDA -->
+                <button onclick="validarYProcesar()" class="button primary-button" id="btnValidar">
+                    <i class="fas fa-check-circle"></i> Validar y Procesar
+                </button>
+                <!-- Botón de limpiar -->
+                <button onclick="limpiarTodo()" class="button secondary-button">
+                    <i class="fas fa-eraser"></i> Limpiar Todo
+                </button>
+            </div>
+
+            <!-- Mensajes de error / validación -->
+            <div id="mensajeValidacion" class="mensaje-validacion hidden"></div>
+
+            <!-- Previsualización de hojas -->
+            <section id="secPreview" class="preview-section hidden">
+                <h3><i class="fas fa-eye"></i> Previsualización de Hojas</h3>
+                <div id="gridPreview" class="grid-preview"></div>
+                
+                <!-- Botón inferior: SOLO DESCARGA -->
+                <button onclick="descargarPDF()" class="button export-button" id="btnDescargar" disabled>
+                    <i class="fas fa-download"></i> Descargar PDF
+                </button>
+            </section>
+        </div>
+    </div>
+
+    <!-- Botones de scroll flotantes -->
+    <div class="scroll-buttons-container">
+        <button class="scrollButton" onclick="scrollToTop()">Subir</button>
+        <button class="scrollButton" onclick="scrollToBottom()">Ir al Final</button>
+    </div>
+
+    <!-- Librerías -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script src="script.js"></script>
+</body>
+</html>
