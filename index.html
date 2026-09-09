@@ -11,14 +11,17 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Overlay de carga -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Cargando archivo, por favor espere...</p>
+        </div>
+    </div>
+
     <div class="container">
         <div class="content-box">
             <div class="titleContainer">
-                <!-- Botón de inicio descomentado si quieres usarlo
-                <button class="home-button" onclick="location.href='../index.html'">
-                    <i class="fas fa-arrow-left"></i> Inicio
-                </button>
-                -->
                 <h1>Organizar y validar | Vouchers Reexpediciones</h1>
                 <p>Carga imágenes/PDF y un Excel para validar y generar un PDF con 4 por hoja.</p>
             </div>
@@ -41,11 +44,9 @@
 
             <!-- Botones de acción -->
             <div class="button-container">
-                <!-- Botón superior: SOLO VALIDA -->
                 <button onclick="validarYProcesar()" class="button primary-button" id="btnValidar">
                     <i class="fas fa-check-circle"></i> Validar y Procesar
                 </button>
-                <!-- Botón de limpiar -->
                 <button onclick="limpiarTodo()" class="button secondary-button">
                     <i class="fas fa-eraser"></i> Limpiar Todo
                 </button>
@@ -58,7 +59,7 @@
             <section id="secPreview" class="preview-section hidden">
                 <h3><i class="fas fa-eye"></i> Previsualización de Hojas</h3>
                 <div id="gridPreview" class="grid-preview"></div>
-                
+
                 <!-- Botón inferior: SOLO DESCARGA -->
                 <button onclick="descargarPDF()" class="button export-button" id="btnDescargar" disabled>
                     <i class="fas fa-download"></i> Descargar PDF
@@ -82,12 +83,11 @@
         </div>
     </footer>
 
-    <!-- Librerías (una sola vez) -->
+    <!-- Librerías -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-    <!-- Script de la aplicación (una sola vez) -->
     <script src="script.js"></script>
 </body>
 </html>
