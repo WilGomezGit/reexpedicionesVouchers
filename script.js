@@ -4,7 +4,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs
 // ==== ESTADO GLOBAL ====
 let archivosProcesados = [];
 let datosExcel = null;
-let pdfListo = false; // Indica si ya se validó correctamente
+let pdfListo = false;
 
 // ==== DRAG & DROP IMÁGENES/PDF ====
 const dropZone = document.getElementById('dropZone');
@@ -76,33 +76,82 @@ fileExcel.addEventListener('change', (e) => {
     }
 });
 
-// ==== LEER EXCEL ====
+// ==== MOSTRAR/OCULTAR OVERLAY DE CARGA ====
+function mostrarCarga() {
+    document.getElementById('loadingOverlay').classList.remove('hidden');
+}
+
+function ocultarCarga() {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+}
+
+// ==== LEER EXCEL (SOLO LEE Y GUARDA, SIN VALIDAR) ====
 function leerExcel(file) {
+    mostrarCarga();
     const reader = new FileReader();
     reader.onload = function(e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheet = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheet];
-        const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
 
-        datosExcel = [];
-        rows.forEach(row => {
-            const doc = String(row['DOCUMENTO'] ?? '').trim();
-            const obs = String(row['OBSERVACIÓN'] ?? row['OBSERVACION'] ?? '').trim().toUpperCase();
-            if (doc) {
-                datosExcel.push({ documento: doc, observacion: obs });
+            // Convertir a matriz de filas (array de arrays)
+            const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+
+            // Buscar fila de encabezados (DOCUMENTO y OBSERVACIÓN)
+            let headerRow = -1;
+            let colDoc = -1;
+            let colObs = -1;
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                for (let j = 0; j < row.length; j++) {
+                    const cell = String(row[j]).toUpperCase();
+                    if (cell.includes('DOCUMENTO')) colDoc = j;
+                    if (cell.includes('OBSERVACIÓN') || cell.includes('OBSERVACION')) colObs = j;
+                }
+                if (colDoc !== -1 && colObs !== -1) {
+                    headerRow = i;
+                    break;
+                }
             }
-        });
 
-        dropZoneExcel.classList.add('file-loaded');
-        dropZoneExcel.querySelector('.drop-title').innerHTML = `<i class="fas fa-check-circle"></i> ${file.name}`;
-        setTimeout(() => dropZoneExcel.classList.remove('file-loaded'), 1000);
+            if (headerRow === -1) {
+                throw new Error('No se encontraron las columnas "DOCUMENTO" y "OBSERVACIÓN".');
+            }
+
+            // Leer datos
+            datosExcel = [];
+            for (let i = headerRow + 1; i < rows.length; i++) {
+                const row = rows[i];
+                const doc = String(row[colDoc] ?? '').trim();
+                const obs = String(row[colObs] ?? '').trim().toUpperCase();
+                if (doc) {
+                    datosExcel.push({ documento: doc, observacion: obs, fila: i + 1 });
+                }
+            }
+
+            // Actualizar UI del drop zone
+            dropZoneExcel.classList.add('file-loaded');
+            dropZoneExcel.querySelector('.drop-title').innerHTML = `<i class="fas fa-check-circle"></i> ${file.name} cargado correctamente`;
+            setTimeout(() => dropZoneExcel.classList.remove('file-loaded'), 1500);
+
+        } catch (error) {
+            console.error(error);
+            mostrarError('Error al leer el Excel: ' + error.message);
+        } finally {
+            ocultarCarga();
+        }
+    };
+    reader.onerror = function() {
+        ocultarCarga();
+        mostrarError('No se pudo leer el archivo.');
     };
     reader.readAsArrayBuffer(file);
 }
 
-// ==== PROCESAR ARCHIVOS (IMÁGENES/PDF) ====
+// ==== PROCESAR ARCHIVOS (IMÁGENES/PDF) - SOLO PROCESA, NO PREVIEW ====
 async function procesarArchivos() {
     const files = fileInput.files;
     if (files.length === 0) return;
@@ -123,7 +172,7 @@ async function procesarArchivos() {
     dropZone.querySelector('.drop-title').innerHTML = `<i class="fas fa-check-circle"></i> ${files.length} archivo(s) cargado(s)`;
     setTimeout(() => dropZone.classList.remove('file-loaded'), 1500);
 
-    // Ocultar preview hasta validar
+    // Asegurarse de ocultar preview y mensajes (aún no validamos)
     document.getElementById('secPreview').classList.add('hidden');
     document.getElementById('mensajeValidacion').classList.add('hidden');
     pdfListo = false;
@@ -257,7 +306,7 @@ function leerArchivoComoImagen(file) {
     });
 }
 
-// ==== VALIDAR Y PROCESAR (NO DESCARGA) ====
+// ==== VALIDAR Y PROCESAR (HACER TODO AQUÍ) ====
 function validarYProcesar() {
     const mensajeDiv = document.getElementById('mensajeValidacion');
     mensajeDiv.classList.add('hidden');
@@ -274,25 +323,43 @@ function validarYProcesar() {
         return;
     }
 
-    // Construir mapa de Excel: documento -> observacion
+    // 1. Detectar documentos duplicados en el Excel
+    const mapDocRows = {};
+    const mensajesDuplicados = [];
+    datosExcel.forEach(item => {
+        if (!mapDocRows[item.documento]) {
+            mapDocRows[item.documento] = [];
+        }
+        mapDocRows[item.documento].push(item.fila);
+    });
+
+    let hayDuplicados = false;
+    for (const doc in mapDocRows) {
+        if (mapDocRows[doc].length > 1) {
+            hayDuplicados = true;
+            mensajesDuplicados.push(`Documento ${doc} repetido en filas: ${mapDocRows[doc].join(', ')}`);
+        }
+    }
+
+    // 2. Construir mapa de Excel: documento -> observacion
     const mapaExcel = {};
     datosExcel.forEach(item => {
         mapaExcel[item.documento] = item.observacion;
     });
 
-    // Validar cada imagen
+    // 3. Validar cada imagen
     const errores = [];
     archivosProcesados.forEach(item => {
         const doc = item.documento;
         const obs = mapaExcel[doc];
 
-        // 1. ¿Existe el documento en el Excel?
+        // ¿Existe el documento en el Excel?
         if (obs === undefined) {
             errores.push(`Documento ${doc}: No existe en el Excel.`);
             return;
         }
 
-        // 2. ¿La observación es válida?
+        // ¿La observación es válida?
         const obsNormalizada = obs.toUpperCase().replace(/\s+/g, ' ').trim();
         const validas = ['COMFACAUCA EN LINEA', 'CORR.BCRIO'];
         if (!validas.includes(obsNormalizada)) {
@@ -300,23 +367,29 @@ function validarYProcesar() {
         }
     });
 
-    // Mostrar errores o preparar descarga
+    // 4. Mostrar errores o preparar descarga
     if (errores.length > 0) {
         mensajeDiv.innerHTML = '<strong>ERRORES DE VALIDACIÓN:</strong><br>' + errores.join('<br>');
         mensajeDiv.classList.remove('hidden');
         mensajeDiv.classList.add('error');
-        pdfListo = false; // Bloquear descarga
+        pdfListo = false;
         document.getElementById('btnDescargar').disabled = true;
         return;
     } else {
-        mensajeDiv.innerHTML = '<strong>✅ Validación correcta.</strong> Todos los documentos coinciden. Ahora puedes descargar el PDF.';
+        // Si hay duplicados, mostrar advertencia (pero permitir continuar)
+        let mensajeFinal = '';
+        if (hayDuplicados) {
+            mensajeFinal = '<strong>⚠️ Advertencia:</strong> Existen documentos duplicados en el Excel:<br>' + mensajesDuplicados.join('<br>') + '<br><br>La validación de imágenes es correcta. Puedes descargar el PDF.';
+            mensajeDiv.classList.add('warning');
+        } else {
+            mensajeFinal = '<strong>✅ Validación correcta.</strong> Todos los documentos coinciden. Ahora puedes descargar el PDF.';
+            mensajeDiv.classList.add('success');
+        }
+        mensajeDiv.innerHTML = mensajeFinal;
         mensajeDiv.classList.remove('hidden');
-        mensajeDiv.classList.add('success');
-        
-        // Mostrar previsualización
+
+        // Mostrar preview y habilitar descarga
         mostrarPrevisualizacion();
-        
-        // Habilitar botón de descarga
         pdfListo = true;
         document.getElementById('btnDescargar').disabled = false;
     }
@@ -328,7 +401,7 @@ function descargarPDF() {
         alert('Primero debes validar los documentos (haz clic en "Validar y Procesar").');
         return;
     }
-    organizarDocumentos(); // Genera y descarga
+    organizarDocumentos();
 }
 
 // ==== MOSTRAR ERROR ====
@@ -470,6 +543,7 @@ function limpiarTodo() {
     document.getElementById('secPreview').classList.add('hidden');
     document.getElementById('gridPreview').innerHTML = '';
     document.getElementById('mensajeValidacion').classList.add('hidden');
+    document.getElementById('mensajeValidacion').classList.remove('warning', 'error', 'success');
 }
 
 // ==== SCROLL ====
