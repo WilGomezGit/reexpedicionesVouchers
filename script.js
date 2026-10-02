@@ -512,7 +512,7 @@ async function organizarDocumentos() {
             }
         }
 
-        doc.save('documentos_validados.pdf');
+        doc.save('Vouchers_Reexpediciones.pdf');
     } catch (error) {
         console.error(error);
         alert('Error al generar PDF. Revisa la consola.');
